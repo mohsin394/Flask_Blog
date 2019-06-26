@@ -3,6 +3,7 @@ from flask import render_template, url_for, redirect, flash
 from flaskblog.forms import RegistrationForm,LoginForm
 from flaskblog import app, db, bcrypt
 from flaskblog.data import Articles
+from flask_login import login_user, current_user, logout_user
 
 posts = Articles()
 @app.route('/')
@@ -35,9 +36,18 @@ def register():
 def login():
     form = LoginForm()
     if form.validate_on_submit():
-        if form.email.data=='mohsin@gmail.com' and form.password.data =='123':
-            flash('Login Successful','success')
+        user = User.query.filter_by(email=form.email.data).first()
+        if user and bcrypt.check_password_hash(user.password, form.password.data):
+            login_user(user)
+            flash('Login Successfull','success')
             return redirect(url_for('home'))
         else:
-            flash('Please check your email and password','danger')
+            flash('Login Unsuccessful. Please check your email and password','danger')
     return render_template('login.html',form=form)
+
+
+
+@app.route('/logout')
+def logout():
+    logout_user()
+    return redirect(url_for('home'))
